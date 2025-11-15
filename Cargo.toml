@@ -7,19 +7,19 @@ members = ["tests", "image_utils", "os"]
 
 
 [workspace.dependencies]
-image_utils = {path = "image_utils" }
-os = {path = "os"}
+image_utils = { path = "image_utils" }
+os = { path = "os" }
 
-tokio = {version = "1.48.0", features = ["default", "rt-multi-thread", "macros", "parking_lot"] }
+tokio = { version = "1.48.0", features = ["default", "rt-multi-thread", "macros", "parking_lot"] }
 anyhow = "1.0.100"
 thiserror = "2.0.17"
 tracing = "0.1.41"
-opencv = {version = "0.97.2", features = ["imgproc", "imgcodecs", "highgui"]}
+opencv = { version = "0.97.2", features = ["imgproc", "imgcodecs", "highgui"] }
 image = "0.25.8"
 ndarray = "0.17.1"
 tesseract = "0.15.2"
 xcap = "0.7.1"
-serde = {version = "1.0.228", features = ["default", "derive"]}
+serde = { version = "1.0.228", features = ["default", "derive"] }
 
 windows = { version = "0.62.2", features = [
     "Win32_Foundation",

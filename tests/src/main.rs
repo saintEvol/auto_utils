@@ -1,6 +1,6 @@
 use tokio::main;
 use image_utils::color_detection::{find_color_at_point, find_color_in_region, find_color_in_region_coord};
-use image_utils::image_match::{find_image_optimized, find_image_optimized_coord};
+use image_utils::image_match::{find_image_optimized, find_image_optimized_coord, find_images_optimized_coords};
 use image_utils::saving::{save_array3_fast, save_array3_via_opencv};
 
 #[main]
@@ -53,5 +53,15 @@ fn test_image_match() {
         println!("在区域找图（坐标版）花费：{cost} 微秒, 找到坐标: ({}, {})", x, y);
     } else {
         println!("在区域找图（坐标版）花费：{cost} 微秒, 未找到");
+    }
+    
+    // 测试多图片坐标版
+    let start = std::time::Instant::now();
+    let paths = vec!["./xl.png", "ch.png"]; // 可以添加多个路径，例如: vec!["./xl.png", "./template2.png"]
+    let coords = find_images_optimized_coords(0, 0, 2560, 1440, &paths, 0.8, false).unwrap();
+    let cost = start.elapsed().as_micros();
+    println!("在区域找多图（坐标版多目标）花费：{cost} 微秒, 找到 {} 个匹配", coords.len());
+    for (i, (x, y)) in coords.iter().enumerate() {
+        println!("  匹配 {}: 坐标 ({}, {})", i + 1, x, y);
     }
 }

@@ -125,10 +125,117 @@ pub fn find_image_optimized_coord(
         screenshot_to_mat_gray(x as u32, y as u32, width, height)?
     };
 
-    // 匹配 - 找到第一个匹配并返回坐标
-    let coord = find_template_coord(&screenshot, &template, threshold, rgb, x, y)?;
+    // 使用与 find_images_optimized_coords 相同的方式：调用 find_all_template 获取所有匹配
+    // 然后取第一个（置信度最高的）匹配，确保坐标计算方式一致
+    let matches = find_all_template(&screenshot, &template, threshold, rgb)?;
     
-    Ok(coord)
+    if let Some(first_match) = matches.first() {
+        // 使用与 find_images_optimized_coords 相同的坐标提取方式
+        let center_x = (*first_match.result.x()).round() as i32;
+        let center_y = (*first_match.result.y()).round() as i32;
+        Ok((x + center_x, y + center_y))
+    } else {
+        // 未找到匹配
+        Ok((0, 0))
+    }
+}
+
+/// 查找多图片（坐标版多目标）- 返回所有匹配的中心点坐标
+///
+/// # 参数
+/// - `x`: 截图区域左上角 X
+/// - `y`: 截图区域左上角 Y
+/// - `width`: 截图宽度
+/// - `height`: 截图高度
+/// - `image_paths`: 模板图片路径列表
+/// - `threshold`: 相似度阈值 (默认 0.75)
+/// - `rgb`: 是否使用彩色匹配 (默认 true)
+///
+/// # 返回
+/// 返回所有找到的匹配坐标列表，每个元素为 (中心点 x, 中心点 y)
+///
+/// # 示例
+/// ```rust
+/// use gjx_image_rs::find_images_optimized_coords;
+///
+/// let paths = vec!["template1.png", "template2.png"];
+/// let coords = find_images_optimized_coords(100, 100, 800, 600, &paths, 0.75, true)?;
+/// for (x, y) in coords {
+///     println!("找到图片，中心点坐标: ({}, {})", x, y);
+/// }
+/// ```
+pub fn find_images_optimized_coords(
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+    image_paths: &[&str],
+    threshold: f64,
+    rgb: bool,
+) -> Result<Vec<(i32, i32)>, ImageMatchError> {
+    if image_paths.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    // 先截图一次，所有模板共享
+    let screenshot = if rgb {
+        screenshot_to_mat(x as u32, y as u32, width, height)?
+    } else {
+        screenshot_to_mat_gray(x as u32, y as u32, width, height)?
+    };
+
+    let mut all_coords = Vec::new();
+
+    // 对每个模板进行匹配
+    for image_path in image_paths {
+        let template = read_image(image_path)?;
+        
+        // 获取模板尺寸，用于判断重叠
+        let template_size = template.size()?;
+        let template_w = template_size.width;
+        let template_h = template_size.height;
+        
+        // 查找所有匹配
+        let matches = find_all_template(&screenshot, &template, threshold, rgb)?;
+        
+        // 使用非极大值抑制（NMS）过滤重叠的匹配
+        // 由于 matches 已按置信度降序排序，我们遍历并只保留不重叠的匹配
+        let mut filtered_coords = Vec::new();
+        
+        // 使用模板尺寸作为最小距离阈值（如果两个匹配距离小于模板尺寸，认为是同一个）
+        let min_distance = template_w.max(template_h) as i32;
+        
+        for match_result in matches {
+            let center_x = (*match_result.result.x()).round() as i32;
+            let center_y = (*match_result.result.y()).round() as i32;
+            let abs_x = x + center_x;
+            let abs_y = y + center_y;
+            
+            // 检查是否与已有匹配重叠
+            let mut is_overlapping = false;
+            
+            for (existing_x, existing_y) in &filtered_coords {
+                // 使用曼哈顿距离判断重叠（更快）
+                let dx = i32::abs(abs_x - *existing_x);
+                let dy = i32::abs(abs_y - *existing_y);
+                
+                // 如果 X 和 Y 方向的距离都小于模板尺寸，认为是重叠
+                if dx < min_distance && dy < min_distance {
+                    is_overlapping = true;
+                    break;
+                }
+            }
+            
+            // 如果不重叠，添加到结果列表
+            if !is_overlapping {
+                filtered_coords.push((abs_x, abs_y));
+            }
+        }
+        
+        all_coords.extend(filtered_coords);
+    }
+
+    Ok(all_coords)
 }
 
 /// 查找所有模板匹配（兼容 aircv.find_all_template）
