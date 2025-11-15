@@ -1,0 +1,13 @@
+[package]
+name = "image_utils"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = {workspace = true}
+thiserror = {workspace = true}
+windows = {workspace = true}
+opencv = {workspace = true}
+xcap = {workspace = true}
+ndarray = {workspace = true}
+serde = {workspace = true}
