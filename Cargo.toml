@@ -3,7 +3,7 @@ name = "auto_utils"
 version = "0.1.0"
 edtion = "2024"
 resolver = "3"
-members = ["tests", "image_utils", "os_utils", "math_utils"]
+members = ["tests", "image_utils", "os_utils", "math_utils", "input_utils"]
 
 
 [workspace.dependencies]
