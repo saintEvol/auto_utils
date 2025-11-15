@@ -1,13 +1,16 @@
+use std::time::Instant;
 use tokio::main;
 use image_utils::color_detection::{find_color_at_point, find_color_in_region, find_color_in_region_coord};
 use image_utils::image_match::{find_image_optimized, find_image_optimized_coord, find_images_optimized_coords};
-use image_utils::saving::{save_array3_fast, save_array3_via_opencv};
+use image_utils::saving::{save_array3_fast};
+use math_utils::{calculate_distance, generate_new_path_array};
 
 #[main]
 pub async fn main() {
     test_screenshot();
     test_color_detection();
     test_image_match();
+    test_math();
 }
 
 fn test_screenshot() {
@@ -64,4 +67,19 @@ fn test_image_match() {
     for (i, (x, y)) in coords.iter().enumerate() {
         println!("  匹配 {}: 坐标 ({}, {})", i + 1, x, y);
     }
+
+}
+
+fn test_math() {
+
+    let start = Instant::now();
+    let ret = calculate_distance(1., 1., 2., 2.,);
+    let cost = start.elapsed().as_micros();
+    println!("计算距离花费：{cost} 微秒, 结果: {ret}");
+
+    let start = Instant::now();
+    let path  = [(100., 100.), (105., 100.), (110., 105.)];
+    let ret = generate_new_path_array(&path, (104., 99.));
+    let cost = start.elapsed().as_micros();
+    println!("计算距离花费：{cost} 微秒, 结果: {ret:?}");
 }

@@ -1,6 +1,5 @@
 
 use ndarray::Array3;
-use opencv::core::AlgorithmHint::ALGO_HINT_APPROX;
 use opencv::core::MatTrait;
 use opencv::imgcodecs;
 use xcap::image::{RgbImage, RgbaImage};

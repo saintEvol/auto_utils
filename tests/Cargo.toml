@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+math_utils = {workspace = true}
 image_utils = {workspace = true}
 opencv = {workspace = true}
 tokio = {workspace = true}

@@ -1,5 +1,4 @@
 use ndarray::{Array, Array3};
-use opencv::core::AlgorithmHint;
 use opencv::prelude::*;
 use xcap::{Monitor};
 use crate::consts::DEFAULT_ALGORITHM_HINT;
@@ -56,7 +55,7 @@ pub fn screenshot_to_mat(
     let monitor = &monitors[0];
     let image = monitor.capture_region(x, y, width, height)?;
 
-    let img_width = image.width() as i32;
+    // let img_width = image.width() as i32;
     let img_height = image.height() as i32;
     let rgba_data = image.into_vec();
 
@@ -101,7 +100,7 @@ pub fn screenshot_to_mat_gray(
     let monitor = &monitors[0];
     let image = monitor.capture_region(x, y, width, height)?;
 
-    let img_width = image.width() as i32;
+    // let img_width = image.width() as i32;
     let img_height = image.height() as i32;
     let rgba_data = image.into_vec();
 
@@ -135,8 +134,8 @@ pub fn screenshot_to_mat_binary(
     x2: u32,
     y2: u32,
 ) -> Result<Mat, ScreenshotError> {
-    let width = (x2 - x1);
-    let height = (y2 - y1);
+    let width = x2 - x1;
+    let height = y2 - y1;
 
     // 截图
     let img = screenshot_to_mat(x1, y1, width, height)?;

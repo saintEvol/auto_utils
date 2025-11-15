@@ -1,7 +1,6 @@
 //! 类型定义
 
 use serde::{Serialize, Deserialize};
-use windows::Win32::Foundation::POINT;
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub struct Point<T> {

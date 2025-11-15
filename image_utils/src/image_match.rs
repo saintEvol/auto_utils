@@ -45,6 +45,7 @@ pub fn read_image(path: &str) -> Result<opencv::core::Mat, ImageMatchError> {
 ///     println!("找到图片！");
 /// }
 /// ```
+/// todo: 待优化，较python版本慢
 pub fn find_image_optimized(
     x: i32,
     y: i32,
@@ -104,6 +105,7 @@ pub fn find_image_optimized(
 ///     println!("找到图片，中心点坐标: ({}, {})", x, y);
 /// }
 /// ```
+/// todo: 待优化，较pyton版本慢
 pub fn find_image_optimized_coord(
     x: i32,
     y: i32,
@@ -164,6 +166,7 @@ pub fn find_image_optimized_coord(
 ///     println!("找到图片，中心点坐标: ({}, {})", x, y);
 /// }
 /// ```
+/// todo: 待优化，较python慢
 pub fn find_images_optimized_coords(
     x: i32,
     y: i32,
@@ -406,7 +409,7 @@ fn find_template_exists(
 ///
 /// # 返回
 /// 如果找到匹配，返回绝对坐标 (中心点 x, 中心点 y)，否则返回 (0, 0)
-fn find_template_coord(
+pub fn find_template_coord(
     imgsrc: &opencv::core::Mat,
     imgobj: &opencv::core::Mat,
     confidence: f64,
