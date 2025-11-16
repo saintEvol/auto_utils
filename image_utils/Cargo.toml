@@ -11,3 +11,4 @@ opencv = {workspace = true}
 xcap = {workspace = true}
 ndarray = {workspace = true}
 serde = {workspace = true}
+rayon = {workspace = true}

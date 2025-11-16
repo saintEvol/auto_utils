@@ -1,7 +1,10 @@
 use std::time::Instant;
+use std::path::Path;
+use std::sync::Arc;
 use opencv::core::{MatTraitConst};
 use opencv::{imgcodecs, imgproc};
 use opencv::prelude::MatTraitConstManual;
+use rayon::prelude::*;
 use crate::consts::DEFAULT_ALGORITHM_HINT;
 use crate::image_match_error::ImageMatchError;
 use crate::screenshot::{screenshot_to_mat, screenshot_to_mat_gray};
@@ -587,4 +590,94 @@ fn extract_matches(
     });
 
     Ok(matches)
+}
+
+/// 找字_图库图片找字_find_all_template_线程版（Rust 实现）
+/// 
+/// 在指定区域中查找数字 0-9，使用并行处理提高性能
+/// 
+/// # 参数
+/// - `x1`: 截图区域左上角 X 坐标
+/// - `y1`: 截图区域左上角 Y 坐标
+/// - `width`: 截图宽度
+/// - `height`: 截图高度
+/// - `library_path`: 图库路径（包含 0.bmp 到 9.bmp 的文件夹）
+/// - `threshold`: 相似度阈值（默认 0.9）
+/// 
+/// # 返回
+/// 识别到的数字字符串（按从左到右的顺序）
+/// 
+/// # 示例
+/// ```rust
+/// use image_utils::image_match::find_characters_from_library_threaded;
+/// 
+/// let result = find_characters_from_library_threaded(
+///     100, 100,      // 截图区域
+///     800, 600,      // 截图尺寸
+///     "C:\\path\\to\\library",  // 图库路径
+///     0.9,           // 相似度阈值
+/// )?;
+/// 
+/// println!("识别结果: {}", result);
+/// ```
+pub fn find_characters_from_library_threaded(
+    x1: i32,
+    y1: i32,
+    width: u32,
+    height: u32,
+    library_path: &str,
+    threshold: f64,
+) -> Result<String, ImageMatchError> {
+    // 截图（使用灰度模式，与 Python 版本保持一致）
+    let screenshot = screenshot_to_mat_gray(x1 as u32, y1 as u32, width, height)?;
+    let screenshot_arc = Arc::new(screenshot);
+    let library_path = Arc::new(library_path.to_string());
+
+    // 使用并行处理查找所有数字（0-9）
+    let results: Vec<(f64, u8)> = (0..10)
+        .into_par_iter()
+        .flat_map(|digit| {
+            // 构建模板图片路径：library_path + "\\" + digit + ".bmp"
+            let template_path = Path::new(library_path.as_str())
+                .join(format!("{}.bmp", digit));
+            
+            let template_path_str = match template_path.to_str() {
+                Some(s) => s,
+                None => return Vec::new(),
+            };
+            
+            // 读取模板图片
+            let template = match read_image(template_path_str) {
+                Ok(t) => t,
+                Err(_) => return Vec::new(), // 如果文件不存在，跳过
+            };
+
+            // 在截图中查找所有匹配
+            let matches = match find_all_template(&screenshot_arc, &template, threshold, false) {
+                Ok(m) => m,
+                Err(_) => return Vec::new(),
+            };
+
+            // 收集所有匹配结果：[(x坐标, 数字)]
+            matches
+                .into_iter()
+                .map(|match_result| {
+                    let x = *match_result.result.x();
+                    (x, digit as u8)
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect();
+
+    // 按 X 坐标排序
+    let mut sorted_results = results;
+    sorted_results.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+
+    // 生成字符串
+    let content_string: String = sorted_results
+        .iter()
+        .map(|(_, digit)| char::from(b'0' + *digit))
+        .collect();
+
+    Ok(content_string)
 }

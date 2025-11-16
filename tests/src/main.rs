@@ -1,9 +1,14 @@
+use image_utils::color_detection::{
+    find_color_at_point, find_color_in_region, find_color_in_region_coord,
+};
+use image_utils::image_match::{
+    find_characters_from_library_threaded, find_image_optimized, find_image_optimized_coord,
+    find_images_optimized_coords,
+};
+use image_utils::saving::save_array3_fast;
+use math_utils::{calculate_distance, generate_new_path_array};
 use std::time::Instant;
 use tokio::main;
-use image_utils::color_detection::{find_color_at_point, find_color_in_region, find_color_in_region_coord};
-use image_utils::image_match::{find_image_optimized, find_image_optimized_coord, find_images_optimized_coords};
-use image_utils::saving::{save_array3_fast};
-use math_utils::{calculate_distance, generate_new_path_array};
 
 #[main]
 pub async fn main() {
@@ -47,39 +52,48 @@ fn test_image_match() {
     let ret = find_image_optimized(0, 0, 2560, 1440, "./xl.png", 0.8, false).unwrap();
     let cost = start.elapsed().as_micros();
     println!("在区域找图花费：{cost}, 结果: {ret}");
-    
+
     // 测试坐标版
     let start = std::time::Instant::now();
     let (x, y) = find_image_optimized_coord(0, 0, 2560, 1440, "./xl.png", 0.8, false).unwrap();
     let cost = start.elapsed().as_micros();
     if x != 0 || y != 0 {
-        println!("在区域找图（坐标版）花费：{cost} 微秒, 找到坐标: ({}, {})", x, y);
+        println!(
+            "在区域找图（坐标版）花费：{cost} 微秒, 找到坐标: ({}, {})",
+            x, y
+        );
     } else {
         println!("在区域找图（坐标版）花费：{cost} 微秒, 未找到");
     }
-    
+
     // 测试多图片坐标版
     let start = std::time::Instant::now();
     let paths = vec!["./xl.png", "ch.png"]; // 可以添加多个路径，例如: vec!["./xl.png", "./template2.png"]
     let coords = find_images_optimized_coords(0, 0, 2560, 1440, &paths, 0.8, false).unwrap();
     let cost = start.elapsed().as_micros();
-    println!("在区域找多图（坐标版多目标）花费：{cost} 微秒, 找到 {} 个匹配", coords.len());
+    println!(
+        "在区域找多图（坐标版多目标）花费：{cost} 微秒, 找到 {} 个匹配",
+        coords.len()
+    );
     for (i, (x, y)) in coords.iter().enumerate() {
         println!("  匹配 {}: 坐标 ({}, {})", i + 1, x, y);
     }
-
 }
 
 fn test_math() {
-
     let start = Instant::now();
-    let ret = calculate_distance(1., 1., 2., 2.,);
+    let ret = calculate_distance(1., 1., 2., 2.);
     let cost = start.elapsed().as_micros();
     println!("计算距离花费：{cost} 微秒, 结果: {ret}");
 
     let start = Instant::now();
-    let path  = [(100., 100.), (105., 100.), (110., 105.)];
+    let path = [(100., 100.), (105., 100.), (110., 105.)];
     let ret = generate_new_path_array(&path, (104., 99.));
     let cost = start.elapsed().as_micros();
-    println!("计算距离花费：{cost} 微秒, 结果: {ret:?}");
+    println!("计算新路径花费：{cost} 微秒, 结果: {ret:?}");
+
+    let start = Instant::now();
+    let ret = find_characters_from_library_threaded(0, 0, 2560, 1440, "./zk", 0.9).unwrap();
+    let cost = start.elapsed().as_micros();
+    println!("图库找字花费：{cost} 微秒, 结果: {ret:?}");
 }

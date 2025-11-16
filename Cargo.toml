@@ -21,6 +21,7 @@ ndarray = "0.17.1"
 tesseract = "0.15.2"
 xcap = "0.7.1"
 serde = { version = "1.0.228", features = ["default", "derive"] }
+rayon = "1.10.0"
 
 windows = { version = "0.62.2", features = [
     "Win32_Foundation",
