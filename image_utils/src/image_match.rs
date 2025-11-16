@@ -620,6 +620,7 @@ fn extract_matches(
 /// 
 /// println!("识别结果: {}", result);
 /// ```
+/// todo: 性能慢于python
 pub fn find_characters_from_library_threaded(
     x1: i32,
     y1: i32,
